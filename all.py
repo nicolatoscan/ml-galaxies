@@ -1,6 +1,5 @@
 # %% imports
 from typing import Any, Dict, List, Tuple
-from numpy.core.fromnumeric import trace
 
 import torch
 from torch.functional import Tensor
@@ -10,7 +9,7 @@ from torchvision.transforms import Compose, RandomCrop, ToTensor, ColorJitter
 from torchvision.datasets import ImageFolder
 
 import matplotlib.pyplot as plt
-import tqdm
+from tqdm import tqdm
 import concurrent.futures
 
 
@@ -60,7 +59,7 @@ def predictModel(model, images: Tensor, name: str, pLabels: Dict[str, Tensor]):
     predictedLabels = torch.from_numpy(model.predict(images))
     pLabels[name] = torch.cat((pLabels[name], predictedLabels), 0)
 
-def predict(models: List[Tuple[Any, str]], max_workers: int = 8) -> Tuple[Tensor, Dict[str, Tensor]]:
+def predict(models: List[Tuple[Any, str]], max_workers: int = 4) -> Tuple[Tensor, Dict[str, Tensor]]:
     gtLabels = torch.tensor([]).int()
     pLabels: Dict[str, Tensor] = {}
     for _, name in models:
@@ -73,12 +72,13 @@ def predict(models: List[Tuple[Any, str]], max_workers: int = 8) -> Tuple[Tensor
                 executor.map(lambda m: predictModel(m[0], images, m[1], pLabels)
                 , models)
             )
+        break
     return (gtLabels, pLabels)
 
 def evaluate(gtLabels: torch.Tensor, pLabels: torch.Tensor, num_classes=10) -> Dict[str, float]:
     C=(gtLabels*num_classes+pLabels).bincount(minlength=num_classes**2).view(num_classes,num_classes).float()
     return {
-        'Acc': C.diag().sum().item() / yt.shape[0],
+        'Acc': C.diag().sum().item() / gtLabels.shape[0],
         'mAcc': (C.diag()/C.sum(-1)).mean().item(),
         'mIoU': (C.diag()/(C.sum(0)+C.sum(1)-C.diag())).mean().item()
     }
@@ -95,7 +95,7 @@ loaderTrain = load_images(datasetTrain, 256)
 loaderValidate = load_images(datasetValidate, 256)
 
 
-# %% Train
+# %% Create models
 from sklearn import tree, ensemble, neighbors, svm
 
 models: List[Tuple[Any, str]] = []
@@ -121,9 +121,16 @@ models += [
     for kernel in ['rbf', 'linear', 'poly'] 
     for C in [0.1, 1, 10]
 ]
+print("Model created")
 
+# %% Train
+print("Training ...")
 train(models)
+print("Trained")
 
 # %% Predict
+print("Predicting ...")
 gtLabels, pLabels = predict(models)
 res = evaluateAll(gtLabels, pLabels)
+print("Predicted")
+
