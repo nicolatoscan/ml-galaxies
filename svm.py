@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, RandomCrop, ToTensor, ColorJitter, Normalize, Resize
 from torchvision.datasets import ImageFolder
 
-from sklearn import neighbors
+from sklearn import svm
 import matplotlib.pyplot as plt
 import concurrent.futures
 
@@ -53,24 +53,24 @@ loaderValidate = load_images(datasetValidate, 256)
 
 
 # %% traim
-knn = neighbors.KNeighborsClassifier(n_jobs=-1)
+svm_model = svm.SVC()
 start = time.time()
 i = 0
 for images, labels in loaderTrain:
     images = cast(Tensor, images)
-    images = torch.cat((
-        images,
-        images.rot90(1, dims=[2, 3]),
-        images.rot90(2, dims=[2, 3]),
-        images.rot90(3, dims=[2, 3]),
-        images.flip(dims=(2,)),
-        images.flip(dims=(3,)),
-        images.rot90(1, dims=[2, 3]).flip(dims=(2,)),
-        images.rot90(1, dims=[2, 3]).flip(dims=(3,)),
-    ))
+    # images = torch.cat((
+    #     images,
+    #     images.rot90(1, dims=[2, 3]),
+    #     images.rot90(2, dims=[2, 3]),
+    #     images.rot90(3, dims=[2, 3]),
+    #     images.flip(dims=(2,)),
+    #     images.flip(dims=(3,)),
+    #     images.rot90(1, dims=[2, 3]).flip(dims=(2,)),
+    #     images.rot90(1, dims=[2, 3]).flip(dims=(3,)),
+    # ))
+    # labels = labels.repeat(8)
     images = images.reshape(images.size(0), -1)
-    labels = labels.repeat(8)
-    knn.fit(images, labels)
+    svm_model.fit(images, labels)
     i += 1
     print(i)
 end = time.time()
@@ -84,7 +84,7 @@ start = time.time()
 i = 0
 for images, labels in loaderValidate:
     images = cast(Tensor, images).reshape(images.size(0), -1)
-    predictedLabels = torch.from_numpy(knn.predict(images))
+    predictedLabels = torch.from_numpy(svm_model.predict(images))
     pLabels = torch.cat((pLabels, predictedLabels), 0)
     gtLabels = torch.cat((gtLabels, labels), 0)
     i += 1
@@ -95,3 +95,5 @@ print(f"Validation time: {end-start}s")
 # %% Evaluate
 x = evaluate(gtLabels, pLabels)
 print(x)
+
+# %%

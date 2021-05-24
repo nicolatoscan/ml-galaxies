@@ -1,4 +1,5 @@
 # %% import
+from tqdm import tqdm
 from matplotlib import image
 from utils.evaluate import evaluate
 
@@ -58,7 +59,7 @@ randomForests = [
 ]
 start = time.time()
 i = 0
-for images, labels in loaderTrain:
+for images, labels in tqdm(loaderTrain):
     print(i)
     i += 1
     images = cast(Tensor, images)
