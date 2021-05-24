@@ -52,7 +52,6 @@ def train(models: List[Tuple[Any, str]], max_workers: int = 8):
             list(
                 executor.map(lambda m: m[0].fit(images, labels), models)
             )
-        break
     print("Done")
 
 def predictModel(model, images: Tensor, name: str, pLabels: Dict[str, Tensor]):
@@ -72,7 +71,6 @@ def predict(models: List[Tuple[Any, str]], max_workers: int = 4) -> Tuple[Tensor
                 executor.map(lambda m: predictModel(m[0], images, m[1], pLabels)
                 , models)
             )
-        break
     return (gtLabels, pLabels)
 
 def evaluate(gtLabels: torch.Tensor, pLabels: torch.Tensor, num_classes=10) -> Dict[str, float]:
