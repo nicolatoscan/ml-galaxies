@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Tuple
 
 import torch
 from torch.functional import Tensor
-from torch.utils.data.dataloader import DataLoader
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, RandomCrop, ToTensor, ColorJitter
 from torchvision.datasets import ImageFolder
@@ -21,12 +20,12 @@ def load_dataset(path: str, isTrain:bool=True) -> ImageFolder:
             RandomCrop(224),
             ToTensor(),
             # ColorJitter(0, 0.5, 0, 0),
-            lambda x: x.permute(1, 2, 0)
+            # lambda x: x.permute(1, 2, 0)
         ]
     else:
         transformations = [
             ToTensor(),
-            lambda x: x.permute(1, 2, 0)
+            # lambda x: x.permute(1, 2, 0)
         ]
 
     transform = Compose(transformations) # remember to normalize the data
@@ -52,6 +51,7 @@ def train(models: List[Tuple[Any, str]], max_workers: int = 8):
             list(
                 executor.map(lambda m: m[0].fit(images, labels), models)
             )
+        break
     print("Done")
 
 def predictModel(model, images: Tensor, name: str, pLabels: Dict[str, Tensor]):
@@ -71,6 +71,7 @@ def predict(models: List[Tuple[Any, str]], max_workers: int = 4) -> Tuple[Tensor
                 executor.map(lambda m: predictModel(m[0], images, m[1], pLabels)
                 , models)
             )
+        break
     return (gtLabels, pLabels)
 
 def evaluate(gtLabels: torch.Tensor, pLabels: torch.Tensor, num_classes=10) -> Dict[str, float]:
@@ -92,7 +93,6 @@ datasetValidate = load_dataset('./assets/dataset/validate')
 loaderTrain = load_images(datasetTrain, 256)
 loaderValidate = load_images(datasetValidate, 256)
 
-
 # %% Create models
 from sklearn import tree, ensemble, neighbors, svm
 
@@ -113,7 +113,7 @@ models += [
 models += [
     (neighbors.KNeighborsClassifier(n_jobs=-1), 'KNN'),
 ]
-#SVM
+# SVM
 models += [
     (svm.SVC(kernel=kernel, C=C), f'SVM {kernel}{C}')
     for kernel in ['rbf', 'linear', 'poly'] 
