@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import concurrent.futures
 
-
 # %% Functions
 def load_dataset(path: str, isTrain:bool=True) -> ImageFolder:
     transformations = []
@@ -20,7 +19,7 @@ def load_dataset(path: str, isTrain:bool=True) -> ImageFolder:
             RandomCrop(224),
             ToTensor(),
             # ColorJitter(0, 0.5, 0, 0),
-            # lambda x: x.permute(1, 2, 0)
+            lambda x: x.permute(1, 2, 0)
         ]
     else:
         transformations = [

@@ -88,11 +88,13 @@ def run(name, model, trDataLoader, vlDataLoader):
 
 # %% load data
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose, RandomCrop, ToTensor
+from torchvision.transforms import Compose, RandomCrop, ToTensor, RandomVerticalFlip, RandomHorizontalFlip
 from torchvision.datasets import ImageFolder
 
 def load_dataset(path: str) -> ImageFolder:
     transformations = [
+        RandomVerticalFlip(),
+        RandomHorizontalFlip(),
         RandomCrop(224),
         ToTensor(),
     ]
