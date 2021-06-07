@@ -98,7 +98,7 @@ def fitModel(model, images: Tensor, labels: Tensor, name: str):
     times["train"][name] = end - start
     print(f"Done {name}")
 
-def train(models: List[Tuple[Any, str]], images: Tensor, labels: Tensor, max_workers: int = 8):
+def train(models: List[Tuple[Any, str]], images: Tensor, labels: Tensor, max_workers: int = 4):
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         list(executor.map(lambda m: fitModel(m[0], images, labels, m[1]), models))
 
@@ -112,7 +112,7 @@ def predictModel(model, name: str, pLabels: Dict[str, Tensor]):
     print(f"Done {name}")
 
 
-def predict(models: List[Tuple[Any, str]], max_workers: int = 4) -> Dict[str, Tensor]:
+def predict(models: List[Tuple[Any, str]], max_workers: int = 2) -> Dict[str, Tensor]:
     pLabels: Dict[str, Tensor] = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         list(
@@ -171,10 +171,12 @@ print("Forest")
 
 # %% KNN
 models = [
-    (neighbors.KNeighborsClassifier(n_jobs=-1), 'KNN'),
+    (neighbors.KNeighborsClassifier(n_jobs=-1, n_neighbors=k), f'KNN {k}')
+    for k in [1, 2, 5, 7, 9]
 ]
-train(models, images=images, labels=labels)
-resultOnModels(models, "KNN.json")
+for model in models:
+    train([model], images=images, labels=labels)
+    resultOnModels([model], "KNN.json")
 print("KNN")
 
 # %% SVM
