@@ -34,13 +34,14 @@ def load_dataset(path: str, grayScale:bool, trainset:bool) -> ImageFolder:
     return dataset
 
 def load_images(dataset: ImageFolder, batch_size=128, trainset:bool=True, sampleWeights:List[float] = []) -> DataLoader:
-    # sampler = WeightedRandomSampler(sampleWeights, num_samples=len(sampleWeights), replacement=True) if trainset else None
+    sampler = WeightedRandomSampler(sampleWeights, num_samples=len(sampleWeights), replacement=True) if trainset else None
     return DataLoader(  dataset,
                         batch_size=batch_size,
-                        shuffle=True,
+                        shuffle=False,
                         num_workers=8,
                         pin_memory=True,
-                        drop_last=False)
+                        drop_last=False,
+                        sampler=sampler)
 
 datasetTrainGrayScale = load_dataset('./dataset/train', True, True)
 datasetTrain = load_dataset('./dataset/train', False, True)
